@@ -4,15 +4,15 @@ import h5py
 import torch
 from torch.utils.data import Dataset
 import networkx as nx
+from networkx.algorithms import community
+import os
 
 
-def load_graph(dataset, k):
-    if k:
-        path = 'graph/{}{}_graph.txt'.format(dataset, k) 
-    else:
-        path = 'graph/{}_graph.txt'.format(dataset) 
-
-    data = np.loadtxt('data/{}.txt'.format(dataset))
+def load_graph(dataset):
+    
+    abspath = os.path.dirname(os.path.abspath(__file__))
+    path = abspath + '/graph/{}_graph.txt'.format(dataset)
+    data = np.loadtxt(abspath + '/data/{}.txt'.format(dataset))
     n, _ = data.shape
 
     idx = np.array([i for i in range(n)], dtype=np.int32)
@@ -32,7 +32,6 @@ def load_graph(dataset, k):
 
     return adj
 
-
 def normalize(mx):
     """Row-normalize sparse matrix"""
     rowsum = np.array(mx.sum(1))
@@ -41,7 +40,6 @@ def normalize(mx):
     r_mat_inv = sp.diags(r_inv)
     mx = r_mat_inv.dot(mx)
     return mx
-
 
 def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     """Convert a scipy sparse matrix to a torch sparse tensor."""
@@ -52,19 +50,15 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     shape = torch.Size(sparse_mx.shape)
     return torch.sparse.FloatTensor(indices, values, shape)
 
-
 class load_data(Dataset):
     def __init__(self, dataset):
-        self.x = np.loadtxt('data/{}.txt'.format(dataset), dtype=float)
-        # self.y = np.loadtxt('data/{}_label.txt'.format(dataset), dtype=int)
+        path = os.path.dirname(os.path.abspath(__file__))
+        self.x = np.loadtxt(path + '/data/{}.txt'.format(dataset), dtype=float)
 
     def __len__(self):
         return self.x.shape[0]
 
     def __getitem__(self, idx):
-        # return torch.from_numpy(np.array(self.x[idx])),\
-        #        torch.from_numpy(np.array(self.y[idx])),\
-        #        torch.from_numpy(np.array(idx))
         return torch.from_numpy(np.array(self.x[idx])),\
                torch.from_numpy(np.array(idx))
 
@@ -86,17 +80,31 @@ def get_graph(path):
     g.add_edges_from(zip(source, target))
     return g
 
-# 带权重的网络
-def get_graph_w(path):
-    f = open(path, 'r', encoding='utf-8')
-    g = nx.DiGraph()
-
+# 加载权重为相似度的网络
+def load_graph_cos(dataset, nodeNum):
+    G = nx.Graph()
+    nodes = [x for x in range(nodeNum)]
+    G.add_nodes_from(nodes)
+    path = os.path.dirname(os.path.abspath(__file__))
+    f = open(path + '/similarity/' + dataset + '_cosine.txt', 'r', encoding='utf-8')
     for line in f.readlines():
-        source = int(line.split(' ')[0])
-        target = int(line.split(' ')[1])
-        weight = float(line.split(' ')[2].replace('\n', ''))
-        g.add_node(source)
-        g.add_node(target)
-        g.add_edge(source, target, pp=weight)
+        n1, n2, weight = line.strip().split()
+        G.add_edge(int(n1), int(n2), weight=float(weight))
+    return G
 
-    return g
+# 加载权重为相似度的有向网络
+def load_DiGraph_cos(dataset, nodeNum):
+    G = nx.DiGraph()
+    nodes = [x for x in range(nodeNum)]
+    G.add_nodes_from(nodes)
+    path = os.path.dirname(os.path.abspath(__file__))
+    f = open(path + '/similarity/' + dataset + '_cosine.txt', 'r', encoding='utf-8')
+    for line in f.readlines():
+        n1, n2, weight = line.strip().split()
+        G.add_edge(int(n1), int(n2), weight=float(weight))
+    return G
+
+# 使用louvain算法划分社区
+def louvain(G):
+    communities = community.louvain_communities(G)
+    return communities
