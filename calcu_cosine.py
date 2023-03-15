@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def calcu_cosine(vec1, vec2):
     cos_sim = vec1.dot(vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
@@ -15,6 +16,8 @@ if __name__ == '__main__':
         vec1 = feature[int(n1)]
         vec2 = feature[int(n2)]
         cos_sim = calcu_cosine(vec1, vec2)
+        if math.isnan(cos_sim):
+            cos_sim = 0
         similarity.write(n1 + ' ' + n2 + ' ' + str(cos_sim) + '\n')
 
 

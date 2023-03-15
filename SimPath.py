@@ -1,9 +1,21 @@
-import networkx as nx
+"""
+Goyal A, Lu W, Lakshmanan L V S. Simpath: An efficient algorithm for influence maximization under the linear threshold model[C]//2011 IEEE 11th international conference on data mining. IEEE, 2011: 211-220.
+"""
 import numpy as np
+import os
+import argparse
+import threading
+import multiprocessing
+# import Queue
+from multiprocessing import Queue
+import networkx as nx
 import heapq
+import time
 import utils
+from LT import LT
+import numpy
+import math
 
-# 有向图，LT
 class CELFQueue:
     # create if not exist
     nodes = None
@@ -29,15 +41,12 @@ class CELFQueue:
 
     def topn(self, n):
         top = heapq.nsmallest(n, self.q)
-        top_ = list()
-        for t in top:
-            top_.append(t[1])
+        top_ = [t[1] for t in top]
         return top_
 
     def get_gain(self, node):
         return self.nodes_gain[node]
 
-# 找到所有长度为L的路径
 def forward(Q, D, spd, pp, r, W, U, spdW_u, graph):
     x = Q[-1]
     if U is None:
@@ -69,14 +78,11 @@ def forward(Q, D, spd, pp, r, W, U, spdW_u, graph):
             children = list(graph.successors(x))
             count = 0
 
-# 计算节点u的影响力
 def backtrack(u, r, W, U, spdW_, graph):
     Q = [u]
     spd = 1
     pp = 1
-    D = list()
-    for i in range(graph.number_of_nodes()):
-        D.append([])
+    D = [[] for i in range(graph.number_of_nodes() + 1)]
 
     while len(Q) != 0:
         Q, D, spd, pp = forward(Q, D, spd, pp, r, W, U, spdW_, graph)
@@ -93,10 +99,10 @@ def backtrack(u, r, W, U, spdW_, graph):
 def simpath_spread(S, r, U, graph, spdW_=None):
     spread = 0
     # W: V-S
-    W = set(graph.nodes()) - S
+    W = set(graph.nodes) - set(S)
     if U is None or spdW_ is None:
-        spdW_ = np.zeros(graph.number_of_nodes())
-
+        spdW_ = np.zeros(graph.number_of_nodes() + 1)
+        # print 'U None'
     for u in S:
         W.add(u)
         # print spdW_[u]
@@ -105,21 +111,25 @@ def simpath_spread(S, r, U, graph, spdW_=None):
         W.remove(u)
     return spread
 
+def influence_spread_computation_LT(graph, seeds, r=0.01):
+    return simpath_spread(seeds, r, None, graph)
+
 # 获取能覆盖所有边的节点
 def get_vertex_cover(graph):
     # dv: 存放图中节点的度
     dv = np.zeros(graph.number_of_nodes())
+    # e[i,j] = 0: edge (i+1,j+1),(j+1,i+1) checked
     check_array = np.zeros((graph.number_of_nodes(), graph.number_of_nodes()))
     checked = 0
 
     for i in range(graph.number_of_nodes()):
-        dv[i] = graph.degree(i)
+        dv[i] = graph.degree[i]
 
     V = set()
     while checked < graph.number_of_edges():
         s = dv.argmax()
         V.add(s)
-        # make sure that never to select this node again
+        # 确保不再选这个节点
         children = graph.successors(s)
         parents = graph.predecessors(s)
         for child in children:
@@ -131,10 +141,69 @@ def get_vertex_cover(graph):
                 check_array[parent][s] = 1
                 checked = checked + 1
         dv[s] = -1
-
-    return V
+    
+    return list(V)
 
 def simpath(graph, k, r, l):
+    # 覆盖所有边的节点集
+    C = set(get_vertex_cover(graph))
+    # 图中的所有节点集
+    V = set(graph.nodes())
+
+    V_C = V - C
+    # spread[x] is spd of S + x
+    spread = np.zeros(graph.number_of_nodes())
+    spdV_ = np.ones((graph.number_of_nodes(), graph.number_of_nodes()))
+    # 计算在C中的节点的spread
+    for u in C:
+        U =  V_C & set(graph.predecessors(u))
+        spread[u] = simpath_spread(set([u]), r, U, graph, spdV_)
+    
+    # 计算不在C中的节点的spread
+    for v in V_C:
+        v_children = graph.successors(v)
+        for child in v_children:
+            spread[v] = spread[v] + spdV_[child][v] * graph[v][child]['weight']
+        spread[v] = spread[v] + 1
+    
+    celf = CELFQueue()
+    # 将所有节点放入celf队列
+    # spread[v] is the marginal gain at this time
+    for node in range(0, graph.number_of_nodes()):
+        celf.put(node, spread[node])
+    S = set()
+    W = V # 所有节点
+    spd = 0
+    # mark the node that checked before during the same Si
+    checked = np.zeros(graph.number_of_nodes())
+
+    while len(S) < k:
+        U = celf.topn(l)
+        spdW_ = np.ones((graph.number_of_nodes(), graph.number_of_nodes()))
+        spdV_x = np.zeros(graph.number_of_nodes())
+        simpath_spread(S, r, U, graph, spdW_=spdW_)
+        for x in U:
+            for s in S:
+                spdV_x[x] = spdV_x[x] + spdW_[s][x]
+        for x in U:
+            if checked[x] != 0:
+            # if checked[x] == 0:
+                S.add(x)
+                W = W - set([x])
+                spd = spread[x]
+                # checked = np.zeros(graph.number_of_nodes())
+                if (-celf.nodes_gain[x], x) in celf.q:
+                    celf.remove(x)
+                break
+            else:
+                spread[x] = backtrack(x, r, W, None, None, graph) + spdV_x[x]
+                checked[x] = 1
+                if (-celf.nodes_gain[x], x) in celf.q:
+                    celf.update(x, spread[x] - spd)
+    return S
+
+
+def simpath1(graph, r):
     # 覆盖所有边的节点集
     C = set(get_vertex_cover(graph))
     # 图中的所有节点集
@@ -156,54 +225,67 @@ def simpath(graph, k, r, l):
             spread[v] = spread[v] + spdV_[child][v] * graph[v][child]['weight']
         spread[v] = spread[v] + 1
 
-    celf = CELFQueue()
-    # 将所有节点放入celf队列
-    # spread[v] is the marginal gain at this time
-    for node in range(graph.number_of_nodes()):
-        celf.put(node, spread[node])
-    S = set()
-    W = V  # 所有节点
-    spd = 0
-    # mark the node that checked before during the same Si
-    checked = np.zeros(graph.number_of_nodes())
-
-    while len(S) < k:
-        U = celf.topn(l)
-        spdW_ = np.ones((graph.number_of_nodes(), graph.number_of_nodes()))
-        spdV_x = np.zeros(graph.number_of_nodes())
-        simpath_spread(S, r, U, graph, spdW_=spdW_)
-        for x in U:
-            for s in S:
-                spdV_x[x] = spdV_x[x] + spdW_[s][x]
-        for x in U:
-            if checked[x] != 0:
-                S.add(x)
-                W = W - set([x])
-                spd = spread[x]
-                # print spread[x],simpath_spread(S,r,None,None)
-                checked = np.zeros(graph.number_of_nodes())
-                celf.remove(x)
-                break
-            else:
-                spread[x] = backtrack(x, r, W, None, None, graph) + spdV_x[x]
-                checked[x] = 1
-                celf.update(x, spread[x] - spd)
-    return S
+    return spread
 
 if __name__ == '__main__':
-    dataset = 'acm'
-    nodeNum = 3025
-    # path = 'similarity/' + dataset + '_cosine.txt'
-    # graph = utils.load_weighted_graph(path, nodeNum)
+    parser = argparse.ArgumentParser(
+        description='train',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--dataset', type=str, default='dblp')
+    # parser.add_argument('--dataset', type=str, default='acm')
+    # parser.add_argument('--dataset', type=str, default='cora')
+    # parser.add_argument('--dataset', type=str, default='citeseer')
+    # parser.add_argument('--dataset', type=str, default='BlogCatalog')
+    # parser.add_argument('--dataset', type=str, default='Sinanet')
+    # parser.add_argument('--dataset', type=str, default='pubmed')
+    # parser.add_argument('--dataset', type=str, default='wiki')
+    parser.add_argument('--k', type=int, default=10)
+    args = parser.parse_args()
 
-    graph = utils.load_DiGraph_cos(dataset, nodeNum)
+    if args.dataset == 'dblp':
+        args.n_input = 334
+        args.nodeNum = 4057
 
-    seeds = simpath(graph, 50, 0.001, 7)
+    if args.dataset == 'acm':
+        args.n_input = 1870
+        args.nodeNum = 3025
+
+    if args.dataset == 'cora':
+        args.n_input = 1433
+        args.nodeNum = 2708
+
+    if args.dataset == 'citeseer':
+        args.n_input = 3703
+        args.nodeNum = 3327
+
+    if args.dataset == 'BlogCatalog':
+        args.n_input = 39
+        args.nodeNum = 10312
+
+    if args.dataset == 'Sinanet':
+        args.n_input = 10
+        args.nodeNum = 3490
+
+    if args.dataset == 'pubmed':
+        args.n_input = 500
+        args.nodeNum = 19717
+
+    start = time.time()
+    G = utils.load_DiGraph_query(args.dataset, args.nodeNum, args.n_input)
+    seeds = simpath(G, args.k, 0.001, 7)
     print(seeds)
+    end = time.time()
 
-
-
-
-
-
-
+    print('dataset: ' + str(args.dataset))
+    f = open('simpathResult/simpath_' + args.dataset + '_' + str(args.k) + '.txt', 'w', encoding='utf-8')
+    spreadSum = LT(G, seeds, mc=10000, method='pp_random') 
+    print('k: ' + str(args.k) + '\n')
+    print('seeds_list: ' + str(seeds))
+    print('spreadSum: ' + str(spreadSum))
+    print('Time: ', end - start)
+    f.write('k: ' + str(args.k) + '\n')
+    f.write('seeds_list: ' + str(seeds) + '\n')
+    f.write('spreadSum: ' + str(spreadSum) + '\n')
+    f.write('Time：' + str(end - start) + '\n')
+    f.close()
+        

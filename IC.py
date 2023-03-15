@@ -1,6 +1,7 @@
 import random
 import multiprocessing as mp
 import networkx as nx
+import utils
 
 class InfWorker(mp.Process):
     def __init__(self, outQ, count, inf_function):
@@ -134,17 +135,9 @@ def IC(g, S, p=0.1, mc=10000, method='random'):
     return influence
 
 if __name__ == '__main__':
-    G = nx.DiGraph()
-    graph_path = 'data/dblp.txt'
-    with open(graph_path, 'r') as f:
-        for i, line in enumerate(f):
-            if i == 0:
-                num_node, num_edge = line.strip().split()
-                continue
-            node1, node2 = line.strip().split()
-            G.add_edge(int(node1), int(node2))
-    G.add_nodes_from([x for x in range(int(num_node))])
-    seeds = [1, 2, 3, 4]
-    inf = IC(G, seeds, mc=10000, p=0.1, method='random')
-    print(inf)
+
+    G = utils.load_graph_pp('dblp', 4057)
+    seeds_list = [545, 1098, 2949, 3361, 586, 3539, 78, 205, 199, 469]
+    spreadSum = IC(G, seeds_list, mc=10000, method='pp_random')
+    print(spreadSum)
 

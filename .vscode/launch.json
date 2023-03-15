@@ -5,13 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: 当前文件",
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "python": "D:/software/Anaconda3/envs/im/python", // 这个是虚拟环境 conda info --envs 可以看虚拟环境的地址
             "console": "integratedTerminal",
-            // "justMyCode": true
+            "justMyCode": true
         }
     ]
 }

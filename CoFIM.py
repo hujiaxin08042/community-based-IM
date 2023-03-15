@@ -1,11 +1,11 @@
 """
-    Shang J, Zhou S, Li X, et al. CoFIM: A community-based framework for influence maximization on large-scale networks[J]. Knowledge-Based Systems, 2017, 117: 88-100.
+Shang J, Zhou S, Li X, et al. CoFIM: A community-based framework for influence maximization on large-scale networks[J]. Knowledge-Based Systems, 2017, 117: 88-100.
 """
 
 import argparse
 import time
 import utils
-from IC import IC
+from IC_query import IC
 
 class CoFIM():
     def __init__(self, G, dataset, nodeNum):
@@ -85,7 +85,6 @@ class CoFIM():
                 best_pair = sorted(pairs.items(), key=lambda item: item[1], reverse=True)[0]
                 pairs = dict(sorted(pairs.items(), key=lambda item: item[1], reverse=True)[1:])
             seed_set, neigh_node, neigh_comm = self.add_seed(seed_set, neigh_node, neigh_comm, best_pair[0])
-            # print(i+1, "\t", best_pair[0])
             updated = [False]*self.nodeNum
         return seed_set
 
@@ -94,28 +93,50 @@ if __name__ == '__main__':
         description='train',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # parser.add_argument('--dataset', type=str, default='dblp')
-    # parser.add_argument('--nodeNum', type=int, default=4057)
     # parser.add_argument('--dataset', type=str, default='acm')
-    # parser.add_argument('--nodeNum', type=int, default=3025)
     # parser.add_argument('--dataset', type=str, default='cora')
-    # parser.add_argument('--nodeNum', type=int, default=2708)
     # parser.add_argument('--dataset', type=str, default='citeseer')
-    # parser.add_argument('--nodeNum', type=int, default=3327)
     parser.add_argument('--dataset', type=str, default='BlogCatalog')
-    parser.add_argument('--nodeNum', type=int, default=10312)
     # parser.add_argument('--dataset', type=str, default='Sinanet')
-    # parser.add_argument('--nodeNum', type=int, default=3490)
     # parser.add_argument('--dataset', type=str, default='pubmed')
-    # parser.add_argument('--nodeNum', type=int, default=19717)
-    parser.add_argument('--k', type=int, default=20)
+    parser.add_argument('--k', type=int, default=50)
     args = parser.parse_args()
 
+    if args.dataset == 'dblp':
+        args.n_input = 334
+        args.nodeNum = 4057
+
+    if args.dataset == 'acm':
+        args.n_input = 1870
+        args.nodeNum = 3025
+
+    if args.dataset == 'cora':
+        args.n_input = 1433
+        args.nodeNum = 2708
+
+    if args.dataset == 'citeseer':
+        args.n_input = 3703
+        args.nodeNum = 3327
+
+    if args.dataset == 'BlogCatalog':
+        args.n_input = 39
+        args.nodeNum = 10312
+
+    if args.dataset == 'Sinanet':
+        args.n_input = 10
+        args.nodeNum = 3490
+
+    if args.dataset == 'pubmed':
+        args.n_input = 500
+        args.nodeNum = 19717
+
     start = time.time()
-    G = utils.load_graph_cos(args.dataset, args.nodeNum)
+    G = utils.load_graph_query(args.dataset, args.nodeNum, args.n_input)
     cofim = CoFIM(G, args.dataset, args.nodeNum)
     seeds = cofim.seed_selection(args.k, 3)
     end = time.time()
     
+    print('dataset: ' + str(args.dataset))
     f = open('CoFIMResult/CoFIM_' + args.dataset + '_' + str(args.k) + '.txt', 'w', encoding='utf-8')
     spreadSum = IC(G, seeds, mc=10000, method='pp_random') 
     print('k: ' + str(args.k) + '\n')

@@ -37,7 +37,7 @@ def load_comm(data, n_clusters, dataset, nodeNum, k, query, ratio):
     
     distribute = F.softmax(torch.tensor(cosines, dtype=torch.float32), dim=0)
     size = F.softmax(torch.tensor(commSize, dtype=torch.float32), dim=0)
-    res = F.softmax(distribute + ratio * size, dim=0)
+    res = F.softmax((1-ratio)*distribute + ratio*size, dim=0)
 
     for i in range(n_clusters):
         select_num[i] = round(float(res[i]) * k)

@@ -82,10 +82,10 @@ def pretrain_ae(model, dataset):
             x_bar, z = model(x)
             loss = F.mse_loss(x_bar, x)
             print('{} loss: {}'.format(epoch, loss))           
-            kmeans = KMeans(n_clusters=4, n_init=20).fit(z.data.cpu().numpy())
+            # kmeans = KMeans(n_clusters=17, n_init=20).fit(z.data.cpu().numpy())
             # eva(y, kmeans.labels_, epoch)
 
-        torch.save(model.state_dict(), 'reddit.pkl')
+        torch.save(model.state_dict(), 'wiki.pkl')
 
 model = AE(
         n_enc_1=500,
@@ -94,10 +94,11 @@ model = AE(
         n_dec_1=2000,
         n_dec_2=500,
         n_dec_3=500,
-        n_input=602,
+        n_input=4973,
         n_z=10,).cuda()
 
-x = np.loadtxt('reddit.txt', dtype=float)
+x = np.loadtxt('wiki.txt', dtype=float)
+# x = np.loadtxt('dblp.txt', dtype=float)
 # y = np.loadtxt('dblp_label.txt', dtype=int)
 
 dataset = LoadDataset(x)

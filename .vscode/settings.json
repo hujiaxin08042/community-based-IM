@@ -1,3 +1,3 @@
 {
-    "python.defaultInterpreterPath": "D:/software/Anaconda3/envs/im/bin/python"
+    "remote.SSH.defaultForwardedPorts": []
 }

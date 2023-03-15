@@ -170,9 +170,12 @@ def train_sdcn(config):
 def main():
     # 将从这些搜索空间中随机抽取参数组合，然后将他们并行训练多个模型，从中找到性能最好的模型
     config = {
-        "n_clusters": tune.grid_search([3, 6, 9, 12]),
-        "lr": tune.grid_search([1e-1, 1e-2, 1e-3, 1e-4]),
-        "ratio": tune.uniform(0, 1)
+        # "n_clusters": tune.grid_search([3, 6, 9, 12]),
+        # "lr": tune.grid_search([1e-1, 1e-2, 1e-3, 1e-4]),
+        "n_clusters": 12,
+        "lr": 0.001,
+        # "ratio": tune.uniform(0, 1)
+         "ratio": tune.grid_search([0, 0.2, 0.5, 0.8, 1])
     }
     
     tuner = tune.Tuner(
@@ -186,7 +189,7 @@ def main():
             # scheduler: 调度程序，默认FIFO
             scheduler=ASHAScheduler(),
             # num_samples: 从超参空间采样的次数，默认为1
-            num_samples=2,
+            num_samples=1,
         ),
         param_space=config,
     )
@@ -203,15 +206,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='train',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--name', type=str, default='dblp')
+    # parser.add_argument('--name', type=str, default='dblp')
     # parser.add_argument('--name', type=str, default='acm')
     # parser.add_argument('--name', type=str, default='cora')
-    # parser.add_argument('--name', type=str, default='citeseer')
+    parser.add_argument('--name', type=str, default='citeseer')
     # parser.add_argument('--name', type=str, default='BlogCatalog')
     # parser.add_argument('--name', type=str, default='Sinanet')
     # parser.add_argument('--name', type=str, default='pubmed')
-    parser.add_argument('--k', type=int, default=20)
-    
+    parser.add_argument('--k', type=int, default=50)
     parser.add_argument('--n_z', default=10, type=int)
     parser.add_argument('--pretrain_path', type=str, default='pkl')
     args = parser.parse_args()
