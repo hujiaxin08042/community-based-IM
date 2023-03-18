@@ -121,7 +121,7 @@ if __name__ == '__main__':
     end = time.time()
 
     print('dataset: ' + str(args.dataset))
-    f = open('incimResult/incim_' + args.dataset + '_' + str(args.k) + '.txt', 'w', encoding='utf-8')
+    f = open('incimResult/incim_' + args.dataset + '_' + str(args.k) + '.txt', 'a', encoding='utf-8')
     graph_query = utils.load_DiGraph_query(args.dataset, args.nodeNum, args.n_input)
     spreadSum = LT(graph_query, seeds, mc=10000, method='pp_random') 
     print('k: ' + str(args.k) + '\n')
