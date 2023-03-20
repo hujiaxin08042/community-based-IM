@@ -297,7 +297,7 @@ if __name__ == "__main__":
     end = time.time()
 
     print('dataset: ' + str(args.name))
-    f = open('sdcn7Result/sdcn_7_' + args.name + '_' + str(args.k) + '.txt', 'w', encoding='utf-8')
+    f = open('sdcn7Result/sdcn_7_' + args.name + '_' + str(args.k) + '.txt', 'a', encoding='utf-8')
     print('k: ' + str(args.k) + '\n')
     print('seeds_list: ' + str(seeds))
     print('spreadSum: ' + str(spreadSum))
