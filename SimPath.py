@@ -202,7 +202,6 @@ def simpath(graph, k, r, l):
                     celf.update(x, spread[x] - spd)
     return S
 
-
 def simpath1(graph, r):
     # 覆盖所有边的节点集
     C = set(get_vertex_cover(graph))
@@ -277,7 +276,7 @@ if __name__ == '__main__':
     end = time.time()
 
     print('dataset: ' + str(args.dataset))
-    f = open('simpathResult/simpath_' + args.dataset + '_' + str(args.k) + '.txt', 'w', encoding='utf-8')
+    f = open('simpathResult/simpath_' + args.dataset + '_' + str(args.k) + '.txt', 'a', encoding='utf-8')
     spreadSum = LT(G, seeds, mc=10000, method='pp_random') 
     print('k: ' + str(args.k) + '\n')
     print('seeds_list: ' + str(seeds))
