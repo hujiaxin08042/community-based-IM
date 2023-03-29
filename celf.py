@@ -105,7 +105,10 @@ if __name__ == "__main__":
         args.n_input = 4973
         args.nodeNum = 2405
 
-    G = utils.load_graph_query(args.dataset, args.nodeNum, args.n_input)
+    # 随机生成维数为属性维数的query
+    query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    args.query = query
+    G = utils.load_graph_query(args.dataset, args.nodeNum, args.query)
     seeds, SPREAD, timelapse, LOOKUPS = celf(G, args.k, mc=10000, method='pp_random')
     spreadSum = SPREAD[-1]
     time = timelapse[-1]

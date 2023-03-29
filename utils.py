@@ -154,11 +154,10 @@ def load_graph_pp(dataset, nodeNum):
         G.add_edge(int(n1), int(n2), weight=float(weight))
     return G
 
-
-def load_graph_query(dataset, nodeNum, n_input):
+def load_graph_query(dataset, nodeNum, query):
     path = os.path.dirname(os.path.abspath(__file__))
     # 随机生成维数为属性维数的query
-    query = np.random.dirichlet(np.ones(n_input), size=1).reshape(n_input,)
+    # query = np.random.dirichlet(np.ones(n_input), size=1).reshape(n_input,)
     # 计算每一个节点与Query的相似度
     features = np.loadtxt(path + '/data/' + dataset + '.txt', dtype=float)
     node_query_sim = [feature.dot(query) / (np.linalg.norm(feature) * np.linalg.norm(query)) for feature in features]

@@ -169,7 +169,7 @@ def im(config, comm_data):
     
     seeds_list = mpCommAI(comm_data, args.n_clusters, args.name, args.nodeNum, args.k, comm_select_num)
     # 创建整个网络的图
-    G = utils.load_graph_query(args.name, args.nodeNum, args.n_input)
+    G = utils.load_graph_query(args.name, args.nodeNum, args.query)
     spreadSum = IC(G, seeds_list, mc=10000, method='pp_random')
     session.report({"spreadSum": spreadSum, "seeds_list": seeds_list})
 
@@ -287,7 +287,8 @@ if __name__ == "__main__":
     start = time.time()
 
     # 随机生成维数为属性维数的query
-    # query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    args.query = query
     # 计算每一个节点与Query的相似度
     # features = numpy.loadtxt(os.path.dirname(os.path.abspath(__file__)) + '/data/' + args.name + '.txt', dtype=float)
     # node_query_sim = [feature.dot(query) / (numpy.linalg.norm(feature) * numpy.linalg.norm(query)) for feature in features]
@@ -307,20 +308,3 @@ if __name__ == "__main__":
     f.write('spreadSum: ' + str(spreadSum) + '\n')
     f.write('Time：' + str(end - start) + '\n')
     f.close()
-
-
-    
-
-
-
-
-
-
-
-
-
-                                                 
-
-
-
-                                                 
