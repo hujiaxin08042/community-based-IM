@@ -136,9 +136,6 @@ def train_sdcn():
     y_pred_last = y_pred
     model.cluster_layer.data = torch.tensor(kmeans.cluster_centers_).to(device)
 
-    # 随机生成维数为属性维数的query
-    # query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
-
     for epoch in range(200):
         if epoch % 1 == 0:
             _, tmp_q, pred, _ = model(data, adj)

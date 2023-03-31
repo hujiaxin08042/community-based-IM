@@ -305,7 +305,7 @@ if __name__ == "__main__":
     start = time.time()
 
     # 随机生成维数为属性维数的query
-    query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    query = numpy.loadtxt('query/' + args.name + '_query.txt', delimiter=',')
     args.query = query
     # 计算每一个节点与Query的相似度
     # features = numpy.loadtxt(os.path.dirname(os.path.abspath(__file__)) + '/data/' + args.name + '.txt', dtype=float)
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     end = time.time()
 
     print('dataset: ' + str(args.name))
-    f = open('sdcn8Result/sdcn_8_' + args.name + '_' + str(args.k) + '.txt', 'a', encoding='utf-8')
+    f = open('sdcn8LTResult/sdcn_8_LT_' + args.name + '_' + str(args.k) + '.txt', 'a', encoding='utf-8')
     print('k: ' + str(args.k) + '\n')
     print('seeds_list: ' + str(seeds))
     print('spreadSum: ' + str(spreadSum))

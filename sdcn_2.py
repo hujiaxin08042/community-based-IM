@@ -159,7 +159,7 @@ def train_sdcn():
 
 def im(res3):
     # 随机生成维数为属性维数的query
-    query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    query = numpy.loadtxt('query/' + args.name + '_query.txt', delimiter=',')
     # 创建整个网络的图
     graph = utils.load_graph_cos(args.name, args.nodeNum)
     comm_data = [int(x) for x in res3]

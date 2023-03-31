@@ -136,9 +136,6 @@ def train_sdcn(config):
     y_pred_last = y_pred
     model.cluster_layer.data = torch.tensor(kmeans.cluster_centers_).to(device)
 
-    # 随机生成维数为属性维数的query
-    # query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
-
     # 创建整个网络的图
     graph = utils.load_graph_cos(args.name, args.nodeNum)
 

@@ -159,7 +159,7 @@ def train_sdcn():
         optimizer.step()
 
     # 随机生成维数为属性维数的query
-    query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    query = numpy.loadtxt('query/' + args.name + '_query.txt', delimiter=',')
     graph = open(os.path.dirname(os.path.abspath(__file__)) + '/graph/' + args.name + '_graph.txt', 'r', encoding='utf-8')
     features = numpy.loadtxt(os.path.dirname(os.path.abspath(__file__)) + '/data/' + args.name + '.txt', dtype=float)
     similarity = open(os.path.dirname(os.path.abspath(__file__)) + '/similarity/' + args.name +'_pp.txt', 'w', encoding='utf-8')
