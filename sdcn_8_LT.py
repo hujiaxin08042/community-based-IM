@@ -14,7 +14,7 @@ from ray import tune
 from ray.air import session
 from ray.tune.schedulers import ASHAScheduler
 import os
-from IC_query import IC
+from LT import LT
 from selectInComm_7 import mpCommAI
 import networkx as nx
 import time
@@ -187,7 +187,7 @@ def im(config, comm_data):
     seeds_list = mpCommAI(comm_data, args.n_clusters, args.name, args.nodeNum, args.k, comm_select_num)
     # 创建整个网络的图
     G = utils.load_graph_query(args.name, args.nodeNum, args.query)
-    spreadSum = IC(G, seeds_list, mc=10000, method='pp_random')
+    spreadSum = LT(G, seeds_list, mc=10000, method='pp_random')
     session.report({"spreadSum": spreadSum, "seeds_list": seeds_list})
 
 def main(comm_data, querySim):
