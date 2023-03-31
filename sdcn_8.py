@@ -10,7 +10,6 @@ from torch.optim import Adam
 from torch.nn import Linear
 from utils import load_data, load_graph
 from GNN import GNNLayer
-import ray
 from ray import tune
 from ray.air import session
 from ray.tune.schedulers import ASHAScheduler
@@ -157,8 +156,26 @@ def train_sdcn():
         optimizer.step()
 
     comm_data = [int(x) for x in res3]
+    features = numpy.loadtxt(os.path.dirname(os.path.abspath(__file__)) + '/data/' + args.name + '.txt', dtype=float)
+    communities = [[] for i in range(args.n_clusters)]
+    querySim = []
 
-    return comm_data
+    for i, d in enumerate(comm_data):
+        communities[d].append(i)
+
+    for i in range(args.n_clusters):
+        comm = communities[i]
+        if len(comm) > 0:
+            data = numpy.asarray([features[i].tolist() for i in comm])
+            # 计算属性的平均值
+            feature = numpy.average(data, axis=0)
+            # 计算属性平均值和Query的余弦相似度
+            cosine = feature.dot(args.query) / (numpy.linalg.norm(feature) * numpy.linalg.norm(args.query))
+            querySim.append(cosine)
+        else:
+            querySim.append(0)
+
+    return comm_data, querySim
 
 def im(config, comm_data):
     
@@ -169,16 +186,19 @@ def im(config, comm_data):
     
     seeds_list = mpCommAI(comm_data, args.n_clusters, args.name, args.nodeNum, args.k, comm_select_num)
     # 创建整个网络的图
-    G = utils.load_graph_query(args.name, args.nodeNum, args.n_input)
+    G = utils.load_graph_query(args.name, args.nodeNum, args.query)
     spreadSum = IC(G, seeds_list, mc=10000, method='pp_random')
     session.report({"spreadSum": spreadSum, "seeds_list": seeds_list})
 
-def main(comm_data):
+def main(comm_data, querySim):
 
-    algo = BayesOptSearch(metric="spreadSum", mode="max", utility_kwargs={"kind": "ei", "kappa": 2.5, "xi": 0.04})
+    print("querySim: ", querySim)
+    algo = BayesOptSearch(metric="spreadSum", mode="max", utility_kwargs={"kind": "ei", "kappa": 2.5, "xi": 0.04}, querySim=querySim)
+    # algo = BayesOptSearch(metric="spreadSum", mode="max", querySim=querySim)
     # 搜索时限制并发数为8
-    algo = ConcurrencyLimiter(algo, max_concurrent=8)
+    algo = ConcurrencyLimiter(algo, max_concurrent=10)
 
+    # num_samples = args.n_clusters * 20
     num_samples = 10
 
     comm_list = []
@@ -189,8 +209,8 @@ def main(comm_data):
     search_space = dict(comm_list)
 
     # search_space = {
-    #     # "n_clusters": 4,
-    #     # "lr": 0.001,
+    #     "n_clusters": 4,
+    #     "lr": 0.001,
     #     "c1": tune.uniform(0, 1),
     #     "c2": tune.uniform(0, 1),
     #     "c3": tune.uniform(0, 1),
@@ -208,9 +228,7 @@ def main(comm_data):
             search_alg=algo,
             num_samples=num_samples,
             # # scheduler: 调度程序，默认FIFO
-            # scheduler=ASHAScheduler(),
-            # # num_samples: 从超参空间采样的次数，默认为1
-            # num_samples=1,
+            scheduler=ASHAScheduler()
         ),
         param_space=search_space,
     )
@@ -235,12 +253,12 @@ if __name__ == "__main__":
     # parser.add_argument('--name', type=str, default='Sinanet')
     # parser.add_argument('--name', type=str, default='pubmed')
     # parser.add_argument('--name', type=str, default='wiki')
-    parser.add_argument('--k', type=int, default=20) 
+    parser.add_argument('--k', type=int, default=50) 
     parser.add_argument('--n_z', default=10, type=int)
     parser.add_argument('--pretrain_path', type=str, default='pkl')
     parser.add_argument('--n_clusters', type=int, default=4)
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--device', type=int, default=0)
+    parser.add_argument('--device', type=int, default=2)
 
     args = parser.parse_args()
     args.cuda = torch.cuda.is_available()
@@ -287,17 +305,18 @@ if __name__ == "__main__":
     start = time.time()
 
     # 随机生成维数为属性维数的query
-    # query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    args.query = query
     # 计算每一个节点与Query的相似度
     # features = numpy.loadtxt(os.path.dirname(os.path.abspath(__file__)) + '/data/' + args.name + '.txt', dtype=float)
     # node_query_sim = [feature.dot(query) / (numpy.linalg.norm(feature) * numpy.linalg.norm(query)) for feature in features]
 
-    comm_data = train_sdcn()
-    seeds, spreadSum = main(comm_data)
+    comm_data, querySim = train_sdcn()
+    seeds, spreadSum = main(comm_data, querySim)
     end = time.time()
 
     print('dataset: ' + str(args.name))
-    f = open('sdcn7Result/sdcn_7_' + args.name + '_' + str(args.k) + '.txt', 'w', encoding='utf-8')
+    f = open('sdcn8Result/sdcn_8_' + args.name + '_' + str(args.k) + '.txt', 'a', encoding='utf-8')
     print('k: ' + str(args.k) + '\n')
     print('seeds_list: ' + str(seeds))
     print('spreadSum: ' + str(spreadSum))

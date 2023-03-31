@@ -6,6 +6,7 @@ import argparse
 import time
 import utils
 from IC_query import IC
+import numpy
 
 class CoFIM():
     def __init__(self, G, dataset, nodeNum):
@@ -131,7 +132,10 @@ if __name__ == '__main__':
         args.nodeNum = 19717
 
     start = time.time()
-    G = utils.load_graph_query(args.dataset, args.nodeNum, args.n_input)
+    # 随机生成维数为属性维数的query
+    query = numpy.random.dirichlet(numpy.ones(args.n_input), size=1).reshape(args.n_input,)
+    args.query = query
+    G = utils.load_graph_query(args.dataset, args.nodeNum, args.query)
     cofim = CoFIM(G, args.dataset, args.nodeNum)
     seeds = cofim.seed_selection(args.k, 3)
     end = time.time()
