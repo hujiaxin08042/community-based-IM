@@ -97,9 +97,9 @@ if __name__ == '__main__':
     # parser.add_argument('--dataset', type=str, default='acm')
     # parser.add_argument('--dataset', type=str, default='cora')
     # parser.add_argument('--dataset', type=str, default='citeseer')
-    parser.add_argument('--dataset', type=str, default='BlogCatalog')
+    # parser.add_argument('--dataset', type=str, default='BlogCatalog')
     # parser.add_argument('--dataset', type=str, default='Sinanet')
-    # parser.add_argument('--dataset', type=str, default='pubmed')
+    parser.add_argument('--dataset', type=str, default='pubmed')
     parser.add_argument('--k', type=int, default=50)
     args = parser.parse_args()
 
@@ -132,7 +132,7 @@ if __name__ == '__main__':
         args.nodeNum = 19717
 
     start = time.time()
-    query = numpy.loadtxt('query/' + args.name + '_query.txt', delimiter=',')
+    query = numpy.loadtxt('query/' + args.dataset + '_query.txt', delimiter=',')
     args.query = query
     G = utils.load_graph_query(args.dataset, args.nodeNum, args.query)
     cofim = CoFIM(G, args.dataset, args.nodeNum)

@@ -49,15 +49,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='train',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--dataset', type=str, default='dblp')
+    # parser.add_argument('--dataset', type=str, default='dblp')
     # parser.add_argument('--dataset', type=str, default='acm')
     # parser.add_argument('--dataset', type=str, default='cora')
     # parser.add_argument('--dataset', type=str, default='citeseer')
     # parser.add_argument('--dataset', type=str, default='BlogCatalog')
     # parser.add_argument('--dataset', type=str, default='Sinanet')
-    # parser.add_argument('--dataset', type=str, default='pubmed')
-    # parser.add_argument('--dataset', type=str, default='wiki')
-    parser.add_argument('--k', type=int, default=10)
+    parser.add_argument('--dataset', type=str, default='pubmed')
+    parser.add_argument('--k', type=int, default=50)
     args = parser.parse_args()
 
     if args.dataset == 'dblp':
@@ -95,7 +94,7 @@ if __name__ == '__main__':
     start = time.time()
 
     # 随机生成维数为属性维数的query
-    query = numpy.loadtxt('query/' + args.name + '_query.txt', delimiter=',')
+    query = numpy.loadtxt('query/' + args.dataset + '_query.txt', delimiter=',')
     args.query = query
     G = utils.load_graph_query(args.dataset, args.nodeNum, args.query)
 
@@ -113,5 +112,5 @@ if __name__ == '__main__':
     f.write('k: ' + str(args.k) + '\n')
     f.write('seeds_list: ' + str(seeds) + '\n')
     f.write('spreadSum: ' + str(spreadSum) + '\n')
-    f.write('Time：' + str(time) + '\n')
+    f.write('Time：' + time + '\n')
     f.close()

@@ -106,7 +106,7 @@ if __name__ == "__main__":
         args.nodeNum = 2405
 
     # 随机生成维数为属性维数的query
-    query = numpy.loadtxt('query/' + args.name + '_query.txt', delimiter=',')
+    query = numpy.loadtxt('query/' + args.dataset + '_query.txt', delimiter=',')
     args.query = query
     G = utils.load_graph_query(args.dataset, args.nodeNum, args.query)
     seeds, SPREAD, timelapse, LOOKUPS = celf(G, args.k, mc=10000, method='pp_random')

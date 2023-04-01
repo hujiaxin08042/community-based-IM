@@ -8,6 +8,7 @@ import time
 import utils
 from LT import LT
 import os
+import numpy
 
 # 创建社区图，每个节点表示一个社区
 def createCommNet(graph, communities):
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     # parser.add_argument('--dataset', type=str, default='Sinanet')
     # parser.add_argument('--dataset', type=str, default='pubmed')
     # parser.add_argument('--dataset', type=str, default='wiki')
-    parser.add_argument('--k', type=int, default=50)
+    parser.add_argument('--k', type=int, default=10)
     args = parser.parse_args()
 
     if args.dataset == 'dblp':
@@ -103,7 +104,6 @@ if __name__ == '__main__':
     f.close()
     
     communities = utils.slpa(graph, 0.5, 20)
-    print(len(communities))
     # 社区图
     G = createCommNet(graph, communities)
 
@@ -122,7 +122,12 @@ if __name__ == '__main__':
 
     print('dataset: ' + str(args.dataset))
     f = open('incimResult/incim_' + args.dataset + '_' + str(args.k) + '.txt', 'a', encoding='utf-8')
-    graph_query = utils.load_DiGraph_query(args.dataset, args.nodeNum, args.n_input)
+
+    query = numpy.loadtxt('query/' + args.dataset + '_query.txt', delimiter=',')
+    args.query = query
+    graph_query = utils.load_DiGraph_query(args.dataset, args.nodeNum, args.query)
+    end = time.time()
+
     spreadSum = LT(graph_query, seeds, mc=10000, method='pp_random') 
     print('k: ' + str(args.k) + '\n') 
     print('seeds_list: ' + str(seeds))

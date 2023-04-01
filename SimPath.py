@@ -230,15 +230,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='train',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--dataset', type=str, default='dblp')
-    # parser.add_argument('--dataset', type=str, default='acm')
+    # parser.add_argument('--dataset', type=str, default='dblp')
+    parser.add_argument('--dataset', type=str, default='acm')
     # parser.add_argument('--dataset', type=str, default='cora')
     # parser.add_argument('--dataset', type=str, default='citeseer')
     # parser.add_argument('--dataset', type=str, default='BlogCatalog')
     # parser.add_argument('--dataset', type=str, default='Sinanet')
     # parser.add_argument('--dataset', type=str, default='pubmed')
-    # parser.add_argument('--dataset', type=str, default='wiki')
-    parser.add_argument('--k', type=int, default=10)
+    parser.add_argument('--k', type=int, default=20)
     args = parser.parse_args()
 
     if args.dataset == 'dblp':
@@ -270,7 +269,9 @@ if __name__ == '__main__':
         args.nodeNum = 19717
 
     start = time.time()
-    G = utils.load_DiGraph_query(args.dataset, args.nodeNum, args.n_input)
+    query = numpy.loadtxt('query/' + args.dataset + '_query.txt', delimiter=',')
+    args.query = query
+    G = utils.load_DiGraph_query(args.dataset, args.nodeNum, args.query)
     seeds = simpath(G, args.k, 0.001, 7)
     print(seeds)
     end = time.time()
