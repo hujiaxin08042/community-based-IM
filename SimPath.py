@@ -231,8 +231,8 @@ if __name__ == '__main__':
         description='train',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # parser.add_argument('--dataset', type=str, default='dblp')
-    parser.add_argument('--dataset', type=str, default='acm')
-    # parser.add_argument('--dataset', type=str, default='cora')
+    # parser.add_argument('--dataset', type=str, default='acm')
+    parser.add_argument('--dataset', type=str, default='cora')
     # parser.add_argument('--dataset', type=str, default='citeseer')
     # parser.add_argument('--dataset', type=str, default='BlogCatalog')
     # parser.add_argument('--dataset', type=str, default='Sinanet')

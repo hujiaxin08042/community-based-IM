@@ -60,7 +60,7 @@ if __name__ == '__main__':
     # parser.add_argument('--dataset', type=str, default='Sinanet')
     # parser.add_argument('--dataset', type=str, default='pubmed')
     # parser.add_argument('--dataset', type=str, default='wiki')
-    parser.add_argument('--k', type=int, default=10)
+    parser.add_argument('--k', type=int, default=30)
     args = parser.parse_args()
 
     if args.dataset == 'dblp':
